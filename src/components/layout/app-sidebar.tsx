@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Tv, Radio, BotMessageSquare } from 'lucide-react';
+import { Home, Tv, Radio } from 'lucide-react';
 
 import {
   Sidebar,
