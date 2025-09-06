@@ -3,7 +3,6 @@ import { Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PlayerControls } from '@/components/radio/player-controls';
-import { GenreForm } from '@/components/radio/genre-form';
 
 const stations = [
   { name: 'Chillwave FM', genre: 'Electronic', image: 'https://picsum.photos/id/3/400/400', hint: 'abstract gradient' },
@@ -30,34 +29,28 @@ export default function RadioPage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <h2 className="mb-4 text-2xl font-semibold tracking-tight">Featured Stations</h2>
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-              {stations.map((station) => (
-                <Card key={station.name} className="group overflow-hidden text-center transition-transform duration-300 hover:scale-105 hover:shadow-lg">
-                  <CardContent className="p-4">
-                    <div className="relative w-full aspect-square">
-                      <Image
-                        src={station.image}
-                        alt={station.name}
-                        width={400}
-                        height={400}
-                        data-ai-hint={station.hint}
-                        className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-black/40 rounded-md" />
-                    </div>
-                    <p className="mt-2 font-semibold text-card-foreground">{station.name}</p>
-                    <p className="text-sm text-muted-foreground">{station.genre}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-          
-          <div className="lg:col-span-1">
-            <GenreForm />
+        <div>
+          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Featured Stations</h2>
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {stations.map((station) => (
+              <Card key={station.name} className="group overflow-hidden text-center transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+                <CardContent className="p-4">
+                  <div className="relative w-full aspect-square">
+                    <Image
+                      src={station.image}
+                      alt={station.name}
+                      width={400}
+                      height={400}
+                      data-ai-hint={station.hint}
+                      className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-black/40 rounded-md" />
+                  </div>
+                  <p className="mt-2 font-semibold text-card-foreground">{station.name}</p>
+                  <p className="text-sm text-muted-foreground">{station.genre}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </main>
