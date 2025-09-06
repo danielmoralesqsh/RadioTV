@@ -18,6 +18,34 @@ interface Channel {
   category: string;
 }
 
+// Function to parse M3U content
+const parseM3U = (content: string): Channel[] => {
+  const channels: Channel[] = [];
+  const lines = content.split('\n');
+  let currentChannel: Partial<Channel> = {};
+
+  for (const line of lines) {
+    if (line.startsWith('#EXTINF:')) {
+      const info = line.match(/tvg-logo="([^"]*)" group-title="([^"]*)"[^,]*,(.*)/);
+      if (info) {
+        currentChannel = {
+          logo: info[1],
+          category: info[2],
+          name: info[3].trim(),
+        };
+      }
+    } else if (line.startsWith('http') && currentChannel.name) {
+      currentChannel.url = line.trim();
+      if (currentChannel.url && currentChannel.logo && currentChannel.category) {
+        channels.push(currentChannel as Channel);
+      }
+      currentChannel = {};
+    }
+  }
+  return channels;
+};
+
+
 export default function TVPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,15 +62,14 @@ export default function TVPage() {
     const fetchChannels = async () => {
       try {
         setLoading(true);
-        // Using a filtered list from IPTV-org for general audience channels
-        const response = await fetch('https://iptv-org.github.io/api/channels.json');
+        const response = await fetch('https://iptv-org.github.io/iptv/countries/ec.m3u');
         if (!response.ok) {
           throw new Error('Failed to fetch channels');
         }
-        const data: Channel[] = await response.json();
+        const m3uContent = await response.text();
+        const parsedChannels = parseM3U(m3uContent);
         
-        // Filter for channels with a logo and a valid stream URL, and exclude adult content
-        const filteredData = data.filter(channel => 
+        const filteredData = parsedChannels.filter(channel => 
           channel.logo && 
           (channel.url.endsWith('.m3u8') || channel.url.endsWith('.mp4')) &&
           channel.category?.toLowerCase() !== 'xxx'
