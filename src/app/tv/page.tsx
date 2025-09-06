@@ -9,7 +9,7 @@ import { VideoPlayer } from '@/components/tv/video-player';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Tv } from 'lucide-react';
 
 interface Channel {
   name: string;
@@ -50,12 +50,7 @@ export default function TVPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedChannel, setSelectedChannel] = useState<Channel | null>({
-    name: 'Big Buck Bunny',
-    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    logo: 'https://picsum.photos/id/1015/400/300',
-    category: 'Animation'
-  });
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -115,11 +110,57 @@ export default function TVPage() {
       </header>
 
       <div className="mb-8">
-        <VideoPlayer src={selectedChannel?.url || ''} key={selectedChannel?.url} />
-        {selectedChannel && (
-          <div className="mt-4">
-            <h2 className="text-2xl font-bold">{selectedChannel.name}</h2>
-            <Badge variant="outline" className="border-accent text-accent mt-1">{selectedChannel.category}</Badge>
+        {selectedChannel ? (
+          <div>
+            <VideoPlayer src={selectedChannel.url} key={selectedChannel.url} />
+            <div className="mt-4">
+              <h2 className="text-2xl font-bold">{selectedChannel.name}</h2>
+              <Badge variant="outline" className="border-accent text-accent mt-1">{selectedChannel.category}</Badge>
+            </div>
+          </div>
+        ) : (
+          <div className="aspect-video w-full rounded-lg bg-muted flex flex-col items-center justify-center p-4">
+            {loading ? (
+              <>
+                <Skeleton className="w-16 h-16" />
+                <Skeleton className="h-4 w-48 mt-4" />
+              </>
+            ) : error ? (
+              <>
+                <WifiOff className="w-16 h-16 text-destructive-foreground" />
+                <p className="mt-4 text-destructive-foreground">Error loading channels</p>
+              </>
+            ) : channels.length > 0 ? (
+              <>
+                <Tv className="w-12 h-12 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mt-4 mb-2">Select a channel to start</h3>
+                <div className="flex gap-4">
+                  {channels.slice(0, 3).map(channel => (
+                     <Card 
+                        key={`${channel.name}-quick-select`} 
+                        className="group overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg cursor-pointer w-40"
+                        onClick={() => handleChannelClick(channel)}
+                      >
+                        <CardContent className="p-0">
+                           <Image
+                            src={channel.logo}
+                            alt={channel.name}
+                            width={160}
+                            height={120}
+                            data-ai-hint="channel logo"
+                            className="w-full h-24 object-contain bg-background/50 p-1"
+                            unoptimized
+                            onError={(e) => { e.currentTarget.src = 'https://picsum.photos/160/120?grayscale'; }}
+                          />
+                        </CardContent>
+                        <p className="text-xs font-semibold truncate p-2 text-center">{channel.name}</p>
+                      </Card>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p>No channels available.</p>
+            )}
           </div>
         )}
       </div>
