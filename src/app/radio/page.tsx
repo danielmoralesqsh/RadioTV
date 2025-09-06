@@ -21,9 +21,8 @@ export default function RadioPage() {
     const fetchStations = async () => {
       try {
         setLoading(true);
-        // Using the main API entry point which should resolve to a working server.
-        // The radio-browser API seems to prefer http over https.
-        const response = await fetch('http://all.api.radio-browser.info/json/stations/byvotes?limit=40');
+        // Using the user-provided API endpoint.
+        const response = await fetch('https://de1.api.radio-browser.info/json/stations/bycountry/Ecuador?limit=40');
         if (!response.ok) {
           throw new Error('Failed to fetch stations');
         }
