@@ -1,13 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { Play, Pause, SkipBack, SkipForward, Volume2, Maximize2 } from 'lucide-react';
+import { Power, SkipBack, SkipForward, Volume2, Maximize2, PowerOff } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
 export function PlayerControls() {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isOff, setIsOff] = useState(false);
 
   return (
     <div className="flex items-center justify-between w-full px-4 py-2 text-foreground">
@@ -33,10 +33,11 @@ export function PlayerControls() {
           </Button>
           <Button
             size="icon"
+            variant={isOff ? "destructive" : "default"}
             className="bg-primary hover:bg-primary/90 rounded-full h-10 w-10 text-primary-foreground"
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={() => setIsOff(!isOff)}
           >
-            {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+            {isOff ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
           </Button>
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <SkipForward className="w-5 h-5" />
@@ -44,7 +45,7 @@ export function PlayerControls() {
         </div>
         <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
           <span>1:23</span>
-          <Slider defaultValue={[40]} max={100} step={1} />
+          <Slider defaultValue={[40]} max={100} step={1} disabled={isOff} />
           <span>3:45</span>
         </div>
       </div>

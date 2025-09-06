@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { Power, PowerOff, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
@@ -12,7 +12,7 @@ interface VideoPlayerProps {
 export function VideoPlayer({ src }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isOff, setIsOff] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -28,14 +28,8 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-      } else {
-        videoRef.current.pause();
-      }
-    }
+  const togglePower = () => {
+    setIsOff(!isOff);
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -80,7 +74,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
   };
 
   const handleMouseLeave = () => {
-    if (isPlaying) {
+    if (!isOff) {
         setShowControls(false);
     }
   };
@@ -89,14 +83,26 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
+    if (isOff) {
+      video.pause();
+    } else {
+      video.play().catch(e => console.error("Autoplay was prevented:", e));
+    }
+  }, [isOff]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);
       setProgress((video.currentTime / video.duration) * 100);
     };
     const onLoadedMetadata = () => {
       setDuration(video.duration);
+      if (!isOff) {
+          video.play().catch(e => console.error("Autoplay was prevented:", e));
+      }
     };
     const onVolumeChange = () => {
       setVolume(video.volume);
@@ -105,8 +111,6 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
 
     const onFullScreenChange = () => setIsFullScreen(!!document.fullscreenElement);
 
-    video.addEventListener('play', onPlay);
-    video.addEventListener('pause', onPause);
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('loadedmetadata', onLoadedMetadata);
     video.addEventListener('volumechange', onVolumeChange);
@@ -115,8 +119,6 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     video.volume = volume;
 
     return () => {
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('pause', onPause);
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
       video.removeEventListener('volumechange', onVolumeChange);
@@ -125,7 +127,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, []);
+  }, [isOff]);
 
   return (
     <div
@@ -137,13 +139,19 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
       <video
         ref={videoRef}
         src={src}
-        className="w-full h-full object-contain"
-        onClick={togglePlay}
+        className={`w-full h-full object-contain ${isOff ? 'invisible' : ''}`}
         onDoubleClick={toggleFullScreen}
+        loop
       />
+      {isOff && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white">
+           <PowerOff className="w-16 h-16 text-muted-foreground" />
+           <p className="mt-4 text-muted-foreground">TV is Off</p>
+        </div>
+      )}
       <div
         className={`absolute inset-0 transition-opacity duration-300 ${
-          showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
+          showControls || isOff ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div
@@ -158,16 +166,17 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
               max={100}
               step={0.1}
               className="w-full"
+              disabled={isOff}
             />
             <span className="text-sm font-medium">{formatTime(duration)}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button onClick={togglePlay} variant="ghost" size="icon" className="text-white hover:text-white hover:bg-white/20">
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+              <Button onClick={togglePower} variant={isOff ? "destructive" : "ghost"} size="icon" className="text-white hover:text-white hover:bg-white/20">
+                {isOff ? <PowerOff className="w-6 h-6" /> : <Power className="w-6 h-6" />}
               </Button>
               <div className="flex items-center gap-2 group/volume">
-                 <Button onClick={toggleMute} variant="ghost" size="icon" className="text-white hover:text-white hover:bg-white/20">
+                 <Button onClick={toggleMute} variant="ghost" size="icon" className="text-white hover:text-white hover:bg-white/20" disabled={isOff}>
                     {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
                  </Button>
                  <Slider
@@ -176,6 +185,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
                    max={100}
                    step={1}
                    className="w-24 transition-all duration-300 opacity-0 group-hover/volume:opacity-100"
+                   disabled={isOff}
                  />
               </div>
             </div>
