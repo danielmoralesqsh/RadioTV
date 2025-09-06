@@ -46,13 +46,6 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     }
   };
 
-  const handleSeek = (value: number[]) => {
-    if (videoRef.current) {
-      const newTime = (value[0] / 100) * duration;
-      videoRef.current.currentTime = newTime;
-    }
-  };
-
   const toggleFullScreen = () => {
     if (!playerRef.current) return;
 
@@ -162,11 +155,10 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
             <span className="text-sm font-medium">{formatTime(currentTime)}</span>
             <Slider
               value={[progress]}
-              onValueChange={handleSeek}
               max={100}
               step={0.1}
               className="w-full"
-              disabled={isOff}
+              disabled
             />
             <span className="text-sm font-medium">{formatTime(duration)}</span>
           </div>

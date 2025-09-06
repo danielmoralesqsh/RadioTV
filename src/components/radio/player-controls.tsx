@@ -45,7 +45,7 @@ export function PlayerControls() {
         </div>
         <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
           <span>1:23</span>
-          <Slider defaultValue={[40]} max={100} step={1} disabled={isOff} />
+          <Slider defaultValue={[40]} max={100} step={1} disabled />
           <span>3:45</span>
         </div>
       </div>
