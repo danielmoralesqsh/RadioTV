@@ -1,28 +1,61 @@
 'use client';
 
 import Image from 'next/image';
-import { Search, WifiOff } from 'lucide-react';
+import { Search, WifiOff, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PlayerControls } from '@/components/radio/player-controls';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { Station } from '@/types/radio';
+
+interface Country {
+  name: string;
+  iso_3166_1: string;
+  stationcount: number;
+}
 
 export default function RadioPage() {
   const [stations, setStations] = useState<Station[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState('Ecuador');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch('https://de1.api.radio-browser.info/json/countries?hidebroken=true&order=stationcount&reverse=true');
+        if (!response.ok) {
+          throw new Error('Failed to fetch countries');
+        }
+        const data: Country[] = await response.json();
+        setCountries(data);
+      } catch (err) {
+        // Not showing this error to the user to avoid clutter
+        console.error(err);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
     const fetchStations = async () => {
+      if (!selectedCountry) return;
       try {
         setLoading(true);
-        // Using the user-provided API endpoint.
-        const response = await fetch('https://de1.api.radio-browser.info/json/stations/bycountry/Ecuador?limit=40');
+        const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(selectedCountry)}?limit=40&hidebroken=true`);
         if (!response.ok) {
           throw new Error('Failed to fetch stations');
         }
@@ -37,13 +70,14 @@ export default function RadioPage() {
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setStations([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchStations();
-  }, []);
+  }, [selectedCountry]);
 
   const handleStationClick = (station: Station) => {
     setSelectedStation(station);
@@ -61,19 +95,38 @@ export default function RadioPage() {
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
             Radio Stations
           </h1>
-          <div className="relative mt-4 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-              placeholder="Search for stations or genres..." 
-              className="pl-10" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-wrap gap-4 mt-4">
+            <div className="relative max-w-sm flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input 
+                placeholder="Search for stations or genres..." 
+                className="pl-10" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="relative min-w-[200px]">
+               <Select onValueChange={setSelectedCountry} value={selectedCountry}>
+                <SelectTrigger className="w-full">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-muted-foreground" />
+                    <SelectValue placeholder="Select a country" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.iso_3166_1} value={country.name}>
+                      {country.name} ({country.stationcount})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </header>
 
         <div>
-          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Featured Stations</h2>
+          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Featured Stations from {selectedCountry}</h2>
           {loading ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {Array.from({ length: 10 }).map((_, i) => (
@@ -90,7 +143,7 @@ export default function RadioPage() {
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          ) : (
+          ) : filteredStations.length > 0 ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filteredStations.map((station) => (
                 <Card 
@@ -120,6 +173,13 @@ export default function RadioPage() {
                 </Card>
               ))}
             </div>
+          ) : (
+             <Alert>
+              <AlertTitle>No Stations Found</AlertTitle>
+              <AlertDescription>
+                No stations found for {selectedCountry} that match your search. Try another country or a different search term.
+              </AlertDescription>
+            </Alert>
           )}
         </div>
       </main>
