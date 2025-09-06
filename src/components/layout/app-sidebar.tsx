@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,11 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { state } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" className="group-data-[variant=floating]:border-none group-data-[variant=floating]:shadow-none">
-      <SidebarHeader className="flex items-center justify-between p-2">
+      <SidebarHeader className="flex items-center p-2">
         <Button variant="ghost" className="h-auto p-1" asChild>
           <Link href="/">
             <Logo className="w-8 h-8" />
@@ -36,10 +38,19 @@ export function AppSidebar() {
             </span>
           </Link>
         </Button>
-        <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+        {state === 'expanded' ? (
+          <SidebarTrigger className="ml-auto" />
+        ) : (
+          <div className="flex-1" />
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
+          {state === 'collapsed' && (
+             <SidebarMenuItem>
+              <SidebarTrigger />
+            </SidebarMenuItem>
+          )}
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
