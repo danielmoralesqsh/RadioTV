@@ -5,30 +5,36 @@ import { Power, SkipBack, SkipForward, Volume2, Maximize2, PowerOff } from 'luci
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import type { Station } from '@/types/radio';
 
-export function PlayerControls() {
+interface PlayerControlsProps {
+  station: Station | null;
+}
+
+export function PlayerControls({ station }: PlayerControlsProps) {
   const [isOff, setIsOff] = useState(false);
 
   return (
     <div className="flex items-center justify-between w-full px-4 py-2 text-foreground">
       <div className="flex items-center gap-4 w-1/4">
         <Image
-          src="https://picsum.photos/id/10/64/64"
-          alt="Album Art"
+          src={station?.favicon || 'https://picsum.photos/id/10/64/64'}
+          alt={station?.name || 'Album Art'}
           width={56}
           height={56}
           data-ai-hint="moody portrait"
-          className="rounded-md"
+          className="rounded-md object-cover"
+          unoptimized // Required for external images that are not configured in next.config.js
         />
         <div>
-          <p className="font-semibold text-sm">Sunset Drive</p>
-          <p className="text-xs text-muted-foreground">Indie Spirit</p>
+          <p className="font-semibold text-sm">{station?.name || 'No station selected'}</p>
+          <p className="text-xs text-muted-foreground">{station?.tags || '...'}</p>
         </div>
       </div>
 
       <div className="flex flex-col items-center justify-center gap-2 w-1/2">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" disabled={!station}>
             <SkipBack className="w-5 h-5" />
           </Button>
           <Button
@@ -36,17 +42,17 @@ export function PlayerControls() {
             variant={isOff ? "destructive" : "default"}
             className="bg-primary hover:bg-primary/90 rounded-full h-10 w-10 text-primary-foreground"
             onClick={() => setIsOff(!isOff)}
+            disabled={!station}
           >
             {isOff ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" disabled={!station}>
             <SkipForward className="w-5 h-5" />
           </Button>
         </div>
-        <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
-          <span>1:23</span>
-          <Slider defaultValue={[40]} max={100} step={1} disabled />
-          <span>3:45</span>
+         <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
+          <audio src={isOff ? '' : station?.url_resolved} autoPlay className="hidden" />
+          {/* Removing progress bar as requested */}
         </div>
       </div>
 
