@@ -12,22 +12,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
+        hostname: '**',
       },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'iptv-org.github.io',
-        port: '',
-        pathname: '/**',
-      }
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
