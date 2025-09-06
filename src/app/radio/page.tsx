@@ -27,10 +27,12 @@ export default function RadioPage() {
           throw new Error('Failed to fetch stations');
         }
         const data: Station[] = await response.json();
-        const stationsWithImages = data.map(station => ({
-          ...station,
-          favicon: station.favicon || `https://picsum.photos/seed/${station.stationuuid}/400`
-        }));
+        const stationsWithImages = data
+          .filter(station => station.url_resolved) // Filter out stations without a valid stream URL
+          .map(station => ({
+            ...station,
+            favicon: station.favicon || `https://picsum.photos/seed/${station.stationuuid}/400`
+          }));
         setStations(stationsWithImages);
         setError(null);
       } catch (err) {
