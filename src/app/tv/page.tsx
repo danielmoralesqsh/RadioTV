@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { VideoPlayer } from '@/components/tv/video-player';
 
 const channels = [
   { name: 'Global News', category: 'News', image: 'https://picsum.photos/id/1015/400/300', hint: 'news broadcast' },
@@ -29,9 +30,7 @@ export default function TVPage() {
       </header>
 
       <div className="mb-8">
-        <div className="aspect-video w-full rounded-lg bg-card flex items-center justify-center border-2 border-dashed border-primary/50">
-          <p className="text-muted-foreground">TV Player Placeholder</p>
-        </div>
+        <VideoPlayer src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
