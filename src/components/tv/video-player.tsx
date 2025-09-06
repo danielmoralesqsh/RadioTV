@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Power, PowerOff, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import Hls from 'hls.js';
 
 interface VideoPlayerProps {
   src: string;
@@ -15,18 +16,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
   const [isOff, setIsOff] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const formatTime = (timeInSeconds: number) => {
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
 
   const togglePower = () => {
     setIsOff(!isOff);
@@ -74,29 +66,63 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !src) return;
 
-    if (isOff) {
-      video.pause();
+    video.volume = volume;
+    let hls: Hls | null = null;
+
+    if (src.endsWith('.m3u8')) {
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (!isOff) {
+            video.play().catch(e => console.error("Autoplay was prevented:", e));
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+        video.addEventListener('loadedmetadata', () => {
+          if (!isOff) {
+            video.play().catch(e => console.error("Autoplay was prevented:", e));
+          }
+        });
+      }
     } else {
-      video.play().catch(e => console.error("Autoplay was prevented:", e));
+      video.src = src;
+      video.addEventListener('loadedmetadata', () => {
+        if (!isOff) {
+          video.play().catch(e => console.error("Autoplay was prevented:", e));
+        }
+      });
     }
-  }, [isOff]);
+    
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+
+  }, [src, isOff, volume]);
+
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
-      setProgress((video.currentTime / video.duration) * 100);
-    };
-    const onLoadedMetadata = () => {
-      setDuration(video.duration);
-      if (!isOff) {
-          video.play().catch(e => console.error("Autoplay was prevented:", e));
-      }
-    };
+    if (isOff) {
+      video.pause();
+    } else if (video.paused && src) {
+      video.play().catch(e => console.error("Autoplay was prevented:", e));
+    }
+  }, [isOff, src]);
+
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
     const onVolumeChange = () => {
       setVolume(video.volume);
       setIsMuted(video.muted);
@@ -104,23 +130,17 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
 
     const onFullScreenChange = () => setIsFullScreen(!!document.fullscreenElement);
 
-    video.addEventListener('timeupdate', onTimeUpdate);
-    video.addEventListener('loadedmetadata', onLoadedMetadata);
     video.addEventListener('volumechange', onVolumeChange);
     document.addEventListener('fullscreenchange', onFullScreenChange);
     
-    video.volume = volume;
-
     return () => {
-      video.removeEventListener('timeupdate', onTimeUpdate);
-      video.removeEventListener('loadedmetadata', onLoadedMetadata);
       video.removeEventListener('volumechange', onVolumeChange);
       document.removeEventListener('fullscreenchange', onFullScreenChange);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isOff]);
+  }, []);
 
   return (
     <div
@@ -131,10 +151,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     >
       <video
         ref={videoRef}
-        src={src}
         className={`w-full h-full object-contain ${isOff ? 'invisible' : ''}`}
         onDoubleClick={toggleFullScreen}
-        loop
+        playsInline
       />
       {isOff && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white">
@@ -148,20 +167,9 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
         }`}
       >
         <div
-          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none"
         />
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium">{formatTime(currentTime)}</span>
-            <Slider
-              value={[progress]}
-              max={100}
-              step={0.1}
-              className="w-full"
-              disabled
-            />
-            <span className="text-sm font-medium">{formatTime(duration)}</span>
-          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button onClick={togglePower} variant={isOff ? "destructive" : "ghost"} size="icon" className="text-white hover:text-white hover:bg-white/20">
