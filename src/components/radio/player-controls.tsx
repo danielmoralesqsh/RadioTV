@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Power, SkipBack, SkipForward, Volume2, Maximize2, PowerOff } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import type { Station } from '@/types/radio';
@@ -12,7 +12,35 @@ interface PlayerControlsProps {
 }
 
 export function PlayerControls({ station }: PlayerControlsProps) {
-  const [isOff, setIsOff] = useState(false);
+  const [isOff, setIsOff] = useState(true);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [volume, setVolume] = useState(0.7);
+
+  useEffect(() => {
+    if (station) {
+      setIsOff(false);
+    }
+  }, [station]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isOff) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(e => console.error("Autoplay was prevented:", e));
+      }
+    }
+  }, [isOff, station]);
+  
+  useEffect(() => {
+    if (audioRef.current) {
+        audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  const handleVolumeChange = (value: number[]) => {
+    setVolume(value[0] / 100);
+  };
 
   return (
     <div className="flex items-center justify-between w-full px-4 py-2 text-foreground">
@@ -24,7 +52,10 @@ export function PlayerControls({ station }: PlayerControlsProps) {
           height={56}
           data-ai-hint="moody portrait"
           className="rounded-md object-cover"
-          unoptimized // Required for external images that are not configured in next.config.js
+          unoptimized
+          onError={(e) => {
+            e.currentTarget.src = 'https://picsum.photos/id/10/64/64';
+          }}
         />
         <div>
           <p className="font-semibold text-sm">{station?.name || 'No station selected'}</p>
@@ -51,14 +82,13 @@ export function PlayerControls({ station }: PlayerControlsProps) {
           </Button>
         </div>
          <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
-          <audio src={isOff ? '' : station?.url_resolved} autoPlay className="hidden" />
-          {/* Removing progress bar as requested */}
+          <audio ref={audioRef} src={station?.url_resolved} className="hidden" />
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-4 w-1/4">
         <Volume2 className="w-5 h-5 text-muted-foreground" />
-        <Slider defaultValue={[70]} max={100} step={1} className="w-24" />
+        <Slider defaultValue={[volume * 100]} max={100} step={1} className="w-24" onValueChange={handleVolumeChange} />
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
           <Maximize2 className="w-5 h-5" />
         </Button>

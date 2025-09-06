@@ -21,7 +21,7 @@ export default function RadioPage() {
     const fetchStations = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://de1.api.radio-browser.info/json/stations/byvotes?limit=40');
+        const response = await fetch('https://at1.api.radio-browser.info/json/stations/byvotes?limit=40');
         if (!response.ok) {
           throw new Error('Failed to fetch stations');
         }
@@ -48,7 +48,7 @@ export default function RadioPage() {
   
   const filteredStations = stations.filter(station =>
     station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    station.tags.toLowerCase().includes(searchTerm.toLowerCase())
+    (station.tags && station.tags.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -105,6 +105,9 @@ export default function RadioPage() {
                         data-ai-hint={station.tags}
                         className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-110"
                         unoptimized
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://picsum.photos/400/400';
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/40 rounded-md" />
                     </div>
