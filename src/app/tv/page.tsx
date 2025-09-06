@@ -1,21 +1,32 @@
 'use client';
 
 import Image from 'next/image';
-import { Search } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
+import { Search, WifiOff, Tv, Globe } from 'lucide-react';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { VideoPlayer } from '@/components/tv/video-player';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { WifiOff, Tv } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Channel {
   name: string;
   logo: string;
   url: string;
   category: string;
+}
+
+interface Country {
+  code: string;
+  name: string;
 }
 
 // Function to parse M3U content
@@ -48,18 +59,42 @@ const parseM3U = (content: string): Channel[] => {
 
 export default function TVPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState('ec');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch('https://iptv-org.github.io/api/countries.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch countries');
+        }
+        const data: Country[] = await response.json();
+        setCountries(data);
+      } catch (err) {
+        // Not showing this error to the user to avoid clutter
+        console.error(err);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
     const fetchChannels = async () => {
+      if (!selectedCountry) return;
       try {
         setLoading(true);
-        const response = await fetch('https://iptv-org.github.io/iptv/countries/ec.m3u');
+        setError(null);
+        setChannels([]);
+        setSelectedChannel(null);
+        const response = await fetch(`https://iptv-org.github.io/iptv/countries/${selectedCountry}.m3u`);
         if (!response.ok) {
-          throw new Error('Failed to fetch channels');
+          throw new Error(`Failed to fetch channels for ${selectedCountry}`);
         }
         const m3uContent = await response.text();
         const parsedChannels = parseM3U(m3uContent);
@@ -81,7 +116,7 @@ export default function TVPage() {
     };
 
     fetchChannels();
-  }, []);
+  }, [selectedCountry]);
 
   const handleChannelClick = (channel: Channel) => {
     setSelectedChannel(channel);
@@ -92,20 +127,41 @@ export default function TVPage() {
     channel.category.toLowerCase().includes(searchTerm.toLowerCase())
   ).slice(0, 50); // Limit to first 50 results for performance
 
+  const countryName = countries.find(c => c.code === selectedCountry)?.name || selectedCountry;
+
   return (
     <div className="h-full p-4 sm:p-6 lg:p-8 flex flex-col">
       <header className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
           TV Channels
         </h1>
-        <div className="relative mt-4 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input 
-            placeholder="Search for channels..." 
-            className="pl-10" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-wrap gap-4 mt-4">
+          <div className="relative max-w-sm flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input 
+              placeholder="Search for channels..." 
+              className="pl-10" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="relative min-w-[200px]">
+             <Select onValueChange={setSelectedCountry} value={selectedCountry}>
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-muted-foreground" />
+                  <SelectValue placeholder="Select a country" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {countries.map((country) => (
+                  <SelectItem key={country.code} value={country.code}>
+                    {country.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </header>
 
@@ -127,7 +183,7 @@ export default function TVPage() {
               </>
             ) : error ? (
               <>
-                <WifiOff className="w-16 h-16 text-destructive-foreground" />
+                <WifiOff className="w-16 h-16 text-destructive" />
                 <p className="mt-4 text-destructive-foreground">Error loading channels</p>
               </>
             ) : channels.length > 0 ? (
@@ -159,13 +215,19 @@ export default function TVPage() {
                 </div>
               </>
             ) : (
-              <p>No channels available.</p>
+              <Alert>
+                <AlertTitle>No Channels Found</AlertTitle>
+                <AlertDescription>
+                  No channels found for {countryName}. Try another country.
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        <h2 className="mb-4 text-2xl font-semibold tracking-tight">Channels from {countryName}</h2>
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -182,7 +244,7 @@ export default function TVPage() {
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-        ) : (
+        ) : filteredChannels.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {filteredChannels.map((channel) => (
               <Card 
@@ -204,12 +266,19 @@ export default function TVPage() {
                     }}
                   />
                 </CardContent>
-                <CardFooter className="flex justify-between items-center p-4">
+                <CardContent className="p-4">
                   <CardTitle className="text-lg font-semibold truncate">{channel.name}</CardTitle>
-                </CardFooter>
+                </CardContent>
               </Card>
             ))}
           </div>
+        ) : (
+          <Alert>
+            <AlertTitle>No Channels Found</AlertTitle>
+            <AlertDescription>
+              No channels found for {countryName} that match your search.
+            </AlertDescription>
+          </Alert>
         )}
       </div>
     </div>
