@@ -21,14 +21,16 @@ export default function RadioPage() {
     const fetchStations = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://at1.api.radio-browser.info/json/stations/byvotes?limit=40');
+        // Using the main API entry point which should resolve to a working server.
+        // The radio-browser API seems to prefer http over https.
+        const response = await fetch('http://all.api.radio-browser.info/json/stations/byvotes?limit=40');
         if (!response.ok) {
           throw new Error('Failed to fetch stations');
         }
         const data: Station[] = await response.json();
         const stationsWithImages = data.map(station => ({
           ...station,
-          favicon: station.favicon || 'https://picsum.photos/400/400'
+          favicon: station.favicon || `https://picsum.photos/seed/${station.stationuuid}/400`
         }));
         setStations(stationsWithImages);
         setError(null);
@@ -106,7 +108,7 @@ export default function RadioPage() {
                         className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-110"
                         unoptimized
                         onError={(e) => {
-                          e.currentTarget.src = 'https://picsum.photos/400/400';
+                          e.currentTarget.src = `https://picsum.photos/seed/${station.stationuuid}/400`;
                         }}
                       />
                       <div className="absolute inset-0 bg-black/40 rounded-md" />
