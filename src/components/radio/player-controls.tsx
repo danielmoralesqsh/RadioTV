@@ -17,8 +17,11 @@ export function PlayerControls({ station }: PlayerControlsProps) {
   const [volume, setVolume] = useState(0.7);
 
   useEffect(() => {
-    if (station) {
+    if (station && audioRef.current) {
       setIsOff(false);
+      audioRef.current.src = station.url_resolved;
+      audioRef.current.load();
+      audioRef.current.play().catch(e => console.error("Autoplay was prevented:", e));
     }
   }, [station]);
 
@@ -27,10 +30,12 @@ export function PlayerControls({ station }: PlayerControlsProps) {
       if (isOff) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(e => console.error("Autoplay was prevented:", e));
+        if (station) {
+            audioRef.current.play().catch(e => console.error("Autoplay was prevented:", e));
+        }
       }
     }
-  }, [isOff, station]);
+  }, [isOff]);
   
   useEffect(() => {
     if (audioRef.current) {
@@ -40,6 +45,15 @@ export function PlayerControls({ station }: PlayerControlsProps) {
 
   const handleVolumeChange = (value: number[]) => {
     setVolume(value[0] / 100);
+  };
+
+  const togglePower = () => {
+    // Prevent turning on if no station is selected
+    if (!station) {
+        setIsOff(true);
+        return;
+    }
+    setIsOff(!isOff);
   };
 
   return (
@@ -58,7 +72,7 @@ export function PlayerControls({ station }: PlayerControlsProps) {
           }}
         />
         <div>
-          <p className="font-semibold text-sm">{station?.name || 'No station selected'}</p>
+          <p className="font-semibold text-sm truncate">{station?.name || 'No station selected'}</p>
           <p className="text-xs text-muted-foreground">{station?.tags || '...'}</p>
         </div>
       </div>
@@ -72,7 +86,7 @@ export function PlayerControls({ station }: PlayerControlsProps) {
             size="icon"
             variant={isOff ? "destructive" : "default"}
             className="bg-primary hover:bg-primary/90 rounded-full h-10 w-10 text-primary-foreground"
-            onClick={() => setIsOff(!isOff)}
+            onClick={togglePower}
             disabled={!station}
           >
             {isOff ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
@@ -82,7 +96,7 @@ export function PlayerControls({ station }: PlayerControlsProps) {
           </Button>
         </div>
          <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
-          <audio ref={audioRef} src={station?.url_resolved} className="hidden" />
+          <audio ref={audioRef} className="hidden" />
         </div>
       </div>
 

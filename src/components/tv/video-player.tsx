@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Power, PowerOff, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { Power, PowerOff, Volume2, VolumeX, Maximize, Minimize, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import Hls from 'hls.js';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface VideoPlayerProps {
   src: string;
@@ -19,6 +20,8 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const togglePower = () => {
     setIsOff(!isOff);
@@ -68,17 +71,36 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     const video = videoRef.current;
     if (!video || !src) return;
 
+    setLoading(true);
+    setError(null);
     video.volume = volume;
     let hls: Hls | null = null;
+    
+    const onCanPlay = () => setLoading(false);
+    const onError = () => {
+        setLoading(false);
+        setError("Channel not available. The video source could not be loaded.");
+    };
+
+    video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('error', onError);
 
     if (src.endsWith('.m3u8')) {
       if (Hls.isSupported()) {
-        hls = new Hls();
+        hls = new Hls({
+            // Wait 5 seconds for media to load
+            manifestLoadingTimeOut: 5000,
+        });
         hls.loadSource(src);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           if (!isOff) {
             video.play().catch(e => console.error("Autoplay was prevented:", e));
+          }
+        });
+        hls.on(Hls.Events.ERROR, function (event, data) {
+          if (data.fatal) {
+            onError();
           }
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -102,6 +124,8 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
       if (hls) {
         hls.destroy();
       }
+       video.removeEventListener('canplay', onCanPlay);
+       video.removeEventListener('error', onError);
     };
 
   }, [src, isOff, volume]);
@@ -113,10 +137,10 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
 
     if (isOff) {
       video.pause();
-    } else if (video.paused && src) {
+    } else if (video.paused && src && !loading && !error) {
       video.play().catch(e => console.error("Autoplay was prevented:", e));
     }
-  }, [isOff, src]);
+  }, [isOff, src, loading, error]);
 
 
   useEffect(() => {
@@ -151,10 +175,26 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     >
       <video
         ref={videoRef}
-        className={`w-full h-full object-contain ${isOff ? 'invisible' : ''}`}
+        className={`w-full h-full object-contain ${isOff || loading || error ? 'invisible' : ''}`}
         onDoubleClick={toggleFullScreen}
         playsInline
       />
+
+       {loading && !isOff && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white">
+           <Skeleton className="w-16 h-16 rounded-full" />
+           <p className="mt-4 text-muted-foreground">Loading Channel...</p>
+        </div>
+      )}
+      
+      {error && !isOff && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white p-4 text-center">
+           <AlertTriangle className="w-16 h-16 text-destructive" />
+           <p className="mt-4 text-destructive-foreground font-semibold">Channel Not Available</p>
+           <p className="mt-2 text-sm text-muted-foreground">The video source could not be loaded. Please try another channel.</p>
+        </div>
+      )}
+
       {isOff && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white">
            <PowerOff className="w-16 h-16 text-muted-foreground" />
