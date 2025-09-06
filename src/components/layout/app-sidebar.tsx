@@ -18,7 +18,7 @@ import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
-  { href: '/', label: 'Home', icon: Home },
+  { href: '/', label: 'Inicio', icon: Home },
   { href: '/tv', label: 'TV', icon: Tv },
   { href: '/radio', label: 'Radio', icon: Radio },
 ];

@@ -21,7 +21,7 @@ export function PlayerControls({ station }: PlayerControlsProps) {
       setIsOff(false);
       audioRef.current.src = station.url_resolved;
       audioRef.current.load();
-      audioRef.current.play().catch(e => console.error("Autoplay was prevented:", e));
+      audioRef.current.play().catch(e => console.error("La reproducción automática fue prevenida:", e));
     }
   }, [station]);
 
@@ -31,11 +31,11 @@ export function PlayerControls({ station }: PlayerControlsProps) {
         audioRef.current.pause();
       } else {
         if (station) {
-            audioRef.current.play().catch(e => console.error("Autoplay was prevented:", e));
+            audioRef.current.play().catch(e => console.error("La reproducción automática fue prevenida:", e));
         }
       }
     }
-  }, [isOff]);
+  }, [isOff, station]);
   
   useEffect(() => {
     if (audioRef.current) {
@@ -61,7 +61,7 @@ export function PlayerControls({ station }: PlayerControlsProps) {
       <div className="flex items-center gap-4 w-1/4">
         <Image
           src={station?.favicon || 'https://picsum.photos/id/10/64/64'}
-          alt={station?.name || 'Album Art'}
+          alt={station?.name || 'Carátula del álbum'}
           width={56}
           height={56}
           data-ai-hint="moody portrait"
@@ -72,7 +72,7 @@ export function PlayerControls({ station }: PlayerControlsProps) {
           }}
         />
         <div>
-          <p className="font-semibold text-sm truncate">{station?.name || 'No station selected'}</p>
+          <p className="font-semibold text-sm truncate">{station?.name || 'No hay emisora seleccionada'}</p>
           <p className="text-xs text-muted-foreground">{station?.tags || '...'}</p>
         </div>
       </div>

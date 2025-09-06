@@ -37,7 +37,7 @@ const parseM3U = (content: string): Channel[] => {
 
   for (const line of lines) {
     if (line.startsWith('#EXTINF:')) {
-      const info = line.match(/tvg-logo="([^"]*)" group-title="([^"]*)"[^,]*,(.*)/);
+      const info = line.match(/tvg-logo=\"([^\"]*)\" group-title=\"([^\"]*)\"[^,]*,(.*)/);
       if (info) {
         currentChannel = {
           logo: info[1],
@@ -71,7 +71,7 @@ export default function TVPage() {
       try {
         const response = await fetch('https://iptv-org.github.io/api/countries.json');
         if (!response.ok) {
-          throw new Error('Failed to fetch countries');
+          throw new Error('No se pudieron obtener los países');
         }
         const data: Country[] = await response.json();
         setCountries(data);
@@ -94,7 +94,7 @@ export default function TVPage() {
         setSelectedChannel(null);
         const response = await fetch(`https://iptv-org.github.io/iptv/countries/${selectedCountry}.m3u`);
         if (!response.ok) {
-          throw new Error(`Failed to fetch channels for ${selectedCountry}`);
+          throw new Error(`No se pudieron obtener los canales para ${selectedCountry}`);
         }
         const m3uContent = await response.text();
         const parsedChannels = parseM3U(m3uContent);
@@ -108,7 +108,7 @@ export default function TVPage() {
         setChannels(filteredData);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido');
         setChannels([]);
       } finally {
         setLoading(false);
@@ -133,14 +133,14 @@ export default function TVPage() {
     <div className="h-full p-4 sm:p-6 lg:p-8 flex flex-col">
       <header className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
-          TV Channels
+          Canales de TV
         </h1>
         <div className="flex flex-wrap gap-4 mt-4">
           <div className="relative max-w-sm flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input 
-              placeholder="Search for channels..." 
-              className="pl-10" 
+              placeholder="Buscar canales..." 
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -150,7 +150,7 @@ export default function TVPage() {
               <SelectTrigger className="w-full">
                 <div className="flex items-center gap-2">
                   <Globe className="h-5 w-5 text-muted-foreground" />
-                  <SelectValue placeholder="Select a country" />
+                  <SelectValue placeholder="Seleccionar un país" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -184,12 +184,12 @@ export default function TVPage() {
             ) : error ? (
               <>
                 <WifiOff className="w-16 h-16 text-destructive" />
-                <p className="mt-4 text-destructive-foreground">Error loading channels</p>
+                <p className="mt-4 text-destructive-foreground">Error al cargar los canales</p>
               </>
             ) : channels.length > 0 ? (
               <>
                 <Tv className="w-12 h-12 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mt-4 mb-2">Select a channel to start</h3>
+                <h3 className="text-xl font-semibold mt-4 mb-2">Selecciona un canal para empezar</h3>
                 <div className="flex gap-4">
                   {channels.slice(0, 3).map(channel => (
                      <Card 
@@ -216,9 +216,9 @@ export default function TVPage() {
               </>
             ) : (
               <Alert>
-                <AlertTitle>No Channels Found</AlertTitle>
+                <AlertTitle>No se encontraron canales</AlertTitle>
                 <AlertDescription>
-                  No channels found for {countryName}. Try another country.
+                  No se encontraron canales para {countryName}. Prueba con otro país.
                 </AlertDescription>
               </Alert>
             )}
@@ -227,7 +227,7 @@ export default function TVPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <h2 className="mb-4 text-2xl font-semibold tracking-tight">Channels from {countryName}</h2>
+        <h2 className="mb-4 text-2xl font-semibold tracking-tight">Canales de {countryName}</h2>
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -274,9 +274,9 @@ export default function TVPage() {
           </div>
         ) : (
           <Alert>
-            <AlertTitle>No Channels Found</AlertTitle>
+            <AlertTitle>No se encontraron canales</AlertTitle>
             <AlertDescription>
-              No channels found for {countryName} that match your search.
+              No se encontraron canales para {countryName} que coincidan con tu búsqueda.
             </AlertDescription>
           </Alert>
         )}

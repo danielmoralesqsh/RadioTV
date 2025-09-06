@@ -37,7 +37,7 @@ export default function RadioPage() {
       try {
         const response = await fetch('https://de1.api.radio-browser.info/json/countries?hidebroken=true&order=stationcount&reverse=true');
         if (!response.ok) {
-          throw new Error('Failed to fetch countries');
+          throw new Error('No se pudieron obtener los países');
         }
         const data: Country[] = await response.json();
         setCountries(data);
@@ -57,7 +57,7 @@ export default function RadioPage() {
         setLoading(true);
         const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(selectedCountry)}?limit=40&hidebroken=true`);
         if (!response.ok) {
-          throw new Error('Failed to fetch stations');
+          throw new Error('No se pudieron obtener las emisoras');
         }
         const data: Station[] = await response.json();
         const stationsWithImages = data
@@ -69,7 +69,7 @@ export default function RadioPage() {
         setStations(stationsWithImages);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido');
         setStations([]);
       } finally {
         setLoading(false);
@@ -93,13 +93,13 @@ export default function RadioPage() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <header className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
-            Radio Stations
+            Emisoras de Radio
           </h1>
           <div className="flex flex-wrap gap-4 mt-4">
             <div className="relative max-w-sm flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input 
-                placeholder="Search for stations or genres..." 
+                placeholder="Buscar emisoras o géneros..." 
                 className="pl-10" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -110,7 +110,7 @@ export default function RadioPage() {
                 <SelectTrigger className="w-full">
                   <div className="flex items-center gap-2">
                     <Globe className="h-5 w-5 text-muted-foreground" />
-                    <SelectValue placeholder="Select a country" />
+                    <SelectValue placeholder="Seleccionar un país" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -126,7 +126,7 @@ export default function RadioPage() {
         </header>
 
         <div>
-          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Featured Stations from {selectedCountry}</h2>
+          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Emisoras destacadas de {selectedCountry}</h2>
           {loading ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {Array.from({ length: 10 }).map((_, i) => (
@@ -175,9 +175,9 @@ export default function RadioPage() {
             </div>
           ) : (
              <Alert>
-              <AlertTitle>No Stations Found</AlertTitle>
+              <AlertTitle>No se encontraron emisoras</AlertTitle>
               <AlertDescription>
-                No stations found for {selectedCountry} that match your search. Try another country or a different search term.
+                No se encontraron emisoras para {selectedCountry} que coincidan con tu búsqueda. Prueba con otro país o un término de búsqueda diferente.
               </AlertDescription>
             </Alert>
           )}
