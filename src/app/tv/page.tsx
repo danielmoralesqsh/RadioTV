@@ -35,7 +35,7 @@ export default function TVPage() {
       try {
         setLoading(true);
         // Using a filtered list from IPTV-org for general audience channels
-        const response = await fetch('https://iptv-org.github.io/iptv/channels.json');
+        const response = await fetch('https://iptv-org.github.io/api/channels.json');
         if (!response.ok) {
           throw new Error('Failed to fetch channels');
         }
