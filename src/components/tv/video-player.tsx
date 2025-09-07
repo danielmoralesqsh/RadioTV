@@ -128,7 +128,7 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
        video.removeEventListener('error', onError);
     };
 
-  }, [src, isOff, volume]);
+  }, [src, isOff]);
 
 
   useEffect(() => {
@@ -175,14 +175,14 @@ export function VideoPlayer({ src }: VideoPlayerProps) {
     >
       <video
         ref={videoRef}
-        className={`w-full h-full object-contain ${isOff || loading || error ? 'invisible' : ''}`}
+        className="w-full h-full object-contain"
         onDoubleClick={toggleFullScreen}
         playsInline
       />
 
        {loading && !isOff && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white">
-           <Skeleton className="w-16 h-16 rounded-full" />
+           <Skeleton className="w-full h-full rounded-full" />
            <p className="mt-4 text-muted-foreground">Loading Channel...</p>
         </div>
       )}

@@ -1,54 +1,20 @@
 'use client';
 
 import Image from 'next/image';
-import { Search, WifiOff, Globe } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { PlayerControls } from '@/components/radio/player-controls';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import type { Station } from '@/types/radio';
-
-interface Country {
-  name: string;
-  iso_3166_1: string;
-  stationcount: number;
-}
 
 export default function RadioPage() {
   const [stations, setStations] = useState<Station[]>([]);
-  const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState('Ecuador');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch('https://de1.api.radio-browser.info/json/countries?hidebroken=true&order=stationcount&reverse=true');
-        if (!response.ok) {
-          throw new Error('No se pudieron obtener los países');
-        }
-        const data: Country[] = await response.json();
-        setCountries(data);
-      } catch (err) {
-        // Not showing this error to the user to avoid clutter
-        console.error(err);
-      }
-    };
-
-    fetchCountries();
-  }, []);
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -83,11 +49,6 @@ export default function RadioPage() {
     setSelectedStation(station);
   };
   
-  const filteredStations = stations.filter(station =>
-    station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (station.tags && station.tags.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   return (
     <div className="h-full flex flex-col">
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -95,38 +56,10 @@ export default function RadioPage() {
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
             Emisoras de Radio
           </h1>
-          <div className="flex flex-wrap gap-4 mt-4">
-            <div className="relative max-w-sm flex-grow">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar emisoras o géneros..." 
-                className="pl-10" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="relative min-w-[200px]">
-               <Select onValueChange={setSelectedCountry} value={selectedCountry}>
-                <SelectTrigger className="w-full">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-5 w-5 text-muted-foreground" />
-                    <SelectValue placeholder="Seleccionar un país" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country.iso_3166_1} value={country.name}>
-                      {country.name} ({country.stationcount})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </header>
 
         <div>
-          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Emisoras destacadas de {selectedCountry}</h2>
+          <h2 className="mb-4 text-2xl font-semibold tracking-tight">Emisoras de Ecuador</h2>
           {loading ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {Array.from({ length: 10 }).map((_, i) => (
@@ -143,9 +76,9 @@ export default function RadioPage() {
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          ) : filteredStations.length > 0 ? (
+          ) : stations.length > 0 ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {filteredStations.map((station) => (
+              {stations.map((station) => (
                 <Card 
                   key={station.stationuuid} 
                   className="group overflow-hidden text-center transition-transform duration-300 hover:scale-105 hover:shadow-lg cursor-pointer"
@@ -177,7 +110,7 @@ export default function RadioPage() {
              <Alert>
               <AlertTitle>No se encontraron emisoras</AlertTitle>
               <AlertDescription>
-                No se encontraron emisoras para {selectedCountry} que coincidan con tu búsqueda. Prueba con otro país o un término de búsqueda diferente.
+                No se encontraron emisoras. 
               </AlertDescription>
             </Alert>
           )}

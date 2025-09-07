@@ -1,11 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { Power, SkipBack, SkipForward, Volume2, Maximize2, PowerOff } from 'lucide-react';
+import { Power, Volume2, Maximize2, PowerOff, Loader2, AlertTriangle } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import type { Station } from '@/types/radio';
+import Hls from 'hls.js';
 
 interface PlayerControlsProps {
   station: Station | null;
@@ -15,14 +16,98 @@ export function PlayerControls({ station }: PlayerControlsProps) {
   const [isOff, setIsOff] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = useState(0.7);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
 
   useEffect(() => {
-    if (station && audioRef.current) {
-      setIsOff(false);
-      audioRef.current.src = station.url_resolved;
-      audioRef.current.load();
-      audioRef.current.play().catch(e => console.error("La reproducción automática fue prevenida:", e));
+    const audio = audioRef.current;
+    if (!audio || !station) return;
+
+    setIsOff(false);
+    setIsLoading(true); // Start loading when a new station is selected
+    setError(null); // Clear any previous errors
+
+    // Clear any existing HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
     }
+
+    const handleCanPlay = () => {
+      setIsLoading(false); // Stop loading when audio can play
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+
+    const handleError = () => {
+      setIsLoading(false);
+      setError("Radio no disponible. Selecciona otra emisora.");
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
+
+    if (station.url_resolved.endsWith('.m3u8')) {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          manifestLoadingTimeOut: 10000, // 10 seconds timeout for manifest
+        });
+        hls.loadSource(station.url_resolved);
+        hls.attachMedia(audio);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (!isOff) {
+            audio.play().catch(e => console.error("La reproducción automática fue prevenida:", e));
+          }
+        });
+        hls.on(Hls.Events.ERROR, function (event, data) {
+          if (data.fatal) {
+            handleError();
+          }
+        });
+        hlsRef.current = hls;
+      } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        audio.src = station.url_resolved;
+        audio.addEventListener('loadedmetadata', () => {
+          if (!isOff) {
+            audio.play().catch(e => console.error("La reproducción automática fue prevenida:", e));
+          }
+        });
+      } else {
+        handleError(); // HLS not supported and native playback not possible
+      }
+    } else {
+      audio.src = station.url_resolved;
+      audio.addEventListener('loadedmetadata', () => {
+        if (!isOff) {
+          audio.play().catch(e => console.error("La reproducción automática fue prevenida:", e));
+        }
+      });
+    }
+
+    // Set a timeout for loading
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (isLoading) {
+        handleError();
+      }
+    }, 10000); // 10 seconds timeout for overall loading
+
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
   }, [station]);
 
   useEffect(() => {
@@ -79,9 +164,6 @@ export function PlayerControls({ station }: PlayerControlsProps) {
 
       <div className="flex flex-col items-center justify-center gap-2 w-1/2">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" disabled={!station}>
-            <SkipBack className="w-5 h-5" />
-          </Button>
           <Button
             size="icon"
             variant={isOff ? "destructive" : "default"}
@@ -89,10 +171,13 @@ export function PlayerControls({ station }: PlayerControlsProps) {
             onClick={togglePower}
             disabled={!station}
           >
-            {isOff ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
-          </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" disabled={!station}>
-            <SkipForward className="w-5 h-5" />
+            {isLoading && !isOff ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : isOff ? (
+              <PowerOff className="w-5 h-5" />
+            ) : (
+              <Power className="w-5 h-5" />
+            )}
           </Button>
         </div>
          <div className="flex items-center gap-2 w-full max-w-md text-xs text-muted-foreground">
@@ -107,6 +192,11 @@ export function PlayerControls({ station }: PlayerControlsProps) {
           <Maximize2 className="w-5 h-5" />
         </Button>
       </div>
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm text-destructive-foreground text-sm font-semibold">
+          <AlertTriangle className="w-5 h-5 mr-2" /> {error}
+        </div>
+      )}
     </div>
   );
 }
