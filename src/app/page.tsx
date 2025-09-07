@@ -21,10 +21,8 @@ export default function Home() {
             <Image
               src="https://picsum.photos/800/600?grayscale"
               alt="TV"
-              width={800}
-              height={600}
               data-ai-hint="television screen"
-              className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-110"
+              className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-110 max-w-full"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
@@ -42,7 +40,7 @@ export default function Home() {
               width={800}
               height={600}
               data-ai-hint="radio waves"
-              className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-110"
+              className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-110 max-w-full"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">

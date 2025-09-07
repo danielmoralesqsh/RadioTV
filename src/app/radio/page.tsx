@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { PlayerControls } from '@/components/radio/player-controls';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +16,7 @@ export default function RadioPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -49,6 +51,11 @@ export default function RadioPage() {
     setSelectedStation(station);
   };
   
+  const filteredStations = stations.filter(station =>
+    station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (station.tags && station.tags.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   return (
     <div className="h-full flex flex-col">
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -56,6 +63,17 @@ export default function RadioPage() {
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
             Emisoras de Radio
           </h1>
+          <div className="flex flex-wrap gap-4 mt-4">
+            <div className="relative max-w-sm flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input 
+                placeholder="Buscar emisoras o géneros..." 
+                className="pl-10" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
         </header>
 
         <div>
@@ -78,7 +96,7 @@ export default function RadioPage() {
             </Alert>
           ) : stations.length > 0 ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {stations.map((station) => (
+              {filteredStations.map((station) => (
                 <Card 
                   key={station.stationuuid} 
                   className="group overflow-hidden text-center transition-transform duration-300 hover:scale-105 hover:shadow-lg cursor-pointer"

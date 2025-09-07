@@ -142,27 +142,28 @@ export function PlayerControls({ station }: PlayerControlsProps) {
   };
 
   return (
-    <div className="flex items-center justify-between w-full px-4 py-2 text-foreground">
-      <div className="flex items-center gap-4 w-1/4">
+    <div className="flex flex-col sm:flex-row items-center justify-between w-full px-1 sm:px-4 py-2 text-foreground">
+      <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-1/4 flex-grow">
         <Image
           src={station?.favicon || 'https://picsum.photos/id/10/64/64'}
           alt={station?.name || 'Carátula del álbum'}
-          width={56}
-          height={56}
+          width={40}
+          height={40}
           data-ai-hint="moody portrait"
-          className="rounded-md object-cover"
+          className="rounded-md object-cover w-10 h-10"
           unoptimized
           onError={(e) => {
             e.currentTarget.src = 'https://picsum.photos/id/10/64/64';
           }}
         />
-        <div>
-          <p className="font-semibold text-sm truncate">{station?.name || 'No hay emisora seleccionada'}</p>
+        <div className="flex-grow min-w-0 max-w-full relative overflow-hidden">
+          <p className="font-semibold text-sm">{station?.name || 'No hay emisora seleccionada'}</p>
           <p className="text-xs text-muted-foreground">{station?.tags || '...'}</p>
+          <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-2 w-1/2">
+      <div className="flex flex-col items-center justify-center gap-2 w-full sm:w-1/2 mt-2 sm:mt-0">
         <div className="flex items-center gap-4">
           <Button
             size="icon"
@@ -185,9 +186,9 @@ export function PlayerControls({ station }: PlayerControlsProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-4 w-1/4">
+      <div className="flex items-center justify-end gap-2 sm:gap-4 w-full sm:w-1/4 mt-2 sm:mt-0">
         <Volume2 className="w-5 h-5 text-muted-foreground" />
-        <Slider defaultValue={[volume * 100]} max={100} step={1} className="w-24" onValueChange={handleVolumeChange} />
+        <Slider defaultValue={[volume * 100]} max={100} step={1} className="w-16 sm:w-24" onValueChange={handleVolumeChange} />
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
           <Maximize2 className="w-5 h-5" />
         </Button>

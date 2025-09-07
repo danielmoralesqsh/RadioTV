@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
+import { MobileSidebarToggle } from '@/components/layout/mobile-sidebar-toggle';
 
 export const metadata: Metadata = {
   title: 'StreamVerse',
@@ -25,7 +26,8 @@ export default function RootLayout({
       <body className={cn("font-body antialiased", "min-h-screen bg-background")}>
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset>
+          <SidebarInset className="max-w-screen-xl mx-auto">
+            <MobileSidebarToggle />
             {children}
           </SidebarInset>
         </SidebarProvider>

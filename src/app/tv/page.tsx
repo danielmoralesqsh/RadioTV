@@ -9,6 +9,7 @@ import { VideoPlayer } from '@/components/tv/video-player';
 import { useState, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 interface Channel {
   name: string;
@@ -103,6 +104,7 @@ export default function TVPage() {
                 <div key={i} className="space-y-2">
                   <Skeleton className="w-full h-24" />
                   <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
                 </div>
               ))}
             </div>
