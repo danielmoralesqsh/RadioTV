@@ -156,10 +156,9 @@ export function PlayerControls({ station }: PlayerControlsProps) {
             e.currentTarget.src = 'https://picsum.photos/id/10/64/64';
           }}
         />
-        <div className="flex-grow min-w-0 max-w-full relative overflow-hidden">
-          <p className="font-semibold text-sm">{station?.name || 'No hay emisora seleccionada'}</p>
-          <p className="text-xs text-muted-foreground">{station?.tags || '...'}</p>
-          <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+        <div className="flex-grow min-w-0 max-w-full">
+          <p className="font-semibold text-sm truncate">{station?.name || 'No hay emisora seleccionada'}</p>
+          <p className="text-xs text-muted-foreground truncate">{station?.tags || '...'}</p>
         </div>
       </div>
 
