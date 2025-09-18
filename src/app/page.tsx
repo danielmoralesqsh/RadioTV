@@ -21,6 +21,8 @@ export default function Home() {
             <Image
               src="https://picsum.photos/800/600?grayscale"
               alt="TV"
+              width={800}
+              height={600}
               data-ai-hint="television screen"
               className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-110 max-w-full"
             />
