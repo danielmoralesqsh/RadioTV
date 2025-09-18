@@ -95,18 +95,6 @@ La estructura principal del proyecto es la siguiente:
 ├── tsconfig.json           # Configuración de TypeScript
 └── README.md               # Este archivo
 ```
-
-## Contribución
-
-¡Las contribuciones son bienvenidas! Si deseas contribuir a este proyecto, por favor, sigue estos pasos:
-
-1.  Haz un fork del repositorio.
-2.  Crea una nueva rama (`git checkout -b feature/nueva-caracteristica`).
-3.  Realiza tus cambios y asegúrate de que el código pase las pruebas y el linter.
-4.  Haz commit de tus cambios (`git commit -m 'feat: Añadir nueva característica'`).
-5.  Haz push a tu rama (`git push origin feature/nueva-caracteristica`).
-6.  Abre un Pull Request.
-
 ## Licencia
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
